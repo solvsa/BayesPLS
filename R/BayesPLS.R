@@ -233,7 +233,8 @@ function(Y, X, ncomp,
           if(update$update.seq.gamma){
             actual <- last
             D <- actual$dvek
-            A <- X.c%*%D[,1:ncomp,drop=FALSE]
+        #    A <- X.c%*%D[,1:ncomp,drop=FALSE]
+            A <- tcrossprod(X.c,t(D[,1:ncomp,drop=FALSE]))
             AAinv <- solve(crossprod(A))        
             moms <- .moments(actual, A, AAinv, Y.c)
             for(j in 1:ncomp){

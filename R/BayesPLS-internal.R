@@ -182,7 +182,8 @@ function(Y,X,ncomp){
     }
 .kern <-
 function(x, logSdet, Sigmainv, mu){
-        -0.5*(logSdet + t(x-mu)%*%Sigmainv%*%(x-mu))
+        #-0.5*(logSdet + t(x-mu)%*%Sigmainv%*%(x-mu))
+        -0.5*(logSdet + crossprod((x-mu),crossprod(Sigmainv,(x-mu))))
     }
 .loginv <-
 function(x){-log(x)}
@@ -194,8 +195,10 @@ function(X, nu, dvek){
 .loglikey <-
 function(Y, X, theta, gamma, dvek, ncomp)    
         {
-            betavek <- dvek[,1:ncomp,drop=FALSE]%*%gamma
-            Yhat <- X%*%betavek
+         #   betavek <- dvek[,1:ncomp,drop=FALSE]%*%gamma
+        #    Yhat <- X%*%betavek
+            betavek <- tcrossprod(gamma, dvek[,1:ncomp,drop=FALSE])
+            Yhat <- t(tcrossprod(betavek, X))
             likey <- .logmvdnorm(Y,mu=Yhat,sigma=sqrt(theta))
             return(likey)
         }
@@ -225,7 +228,8 @@ function(Y,X,a,b=NULL,pars=c("dvek","theta","nu","gamma"),
       p <- dim(X)[2]
       D <- a$dvek
         m <- length(a$gamma)
-        A <- X%*%D[,1:m,drop=FALSE]
+        #A <- X%*%D[,1:m,drop=FALSE]
+        A <- tcrossprod(X,t(D[,1:m,drop=FALSE]))
         AAinv <- solve(crossprod(A))
         H1 <- tcrossprod(AAinv,A)
         H <- A%*%H1
