@@ -182,7 +182,8 @@ function(Y,X,ncomp){
     }
 .kern <-
 function(x, logSdet, Sigmainv, mu){
-        -0.5*(logSdet + t(x-mu)%*%Sigmainv%*%(x-mu))
+        #-0.5*(logSdet + t(x-mu)%*%Sigmainv%*%(x-mu))
+        -0.5*(logSdet + crossprod((x-mu),crossprod(Sigmainv,(x-mu))))
     }
 .loginv <-
 function(x){-log(x)}
@@ -194,8 +195,10 @@ function(X, nu, dvek){
 .loglikey <-
 function(Y, X, theta, gamma, dvek, ncomp)    
         {
-            betavek <- dvek[,1:ncomp,drop=FALSE]%*%gamma
-            Yhat <- X%*%betavek
+         #   betavek <- dvek[,1:ncomp,drop=FALSE]%*%gamma
+        #    Yhat <- X%*%betavek
+            betavek <- tcrossprod(gamma, dvek[,1:ncomp,drop=FALSE])
+            Yhat <- t(tcrossprod(betavek, X))
             likey <- .logmvdnorm(Y,mu=Yhat,sigma=sqrt(theta))
             return(likey)
         }
@@ -225,7 +228,8 @@ function(Y,X,a,b=NULL,pars=c("dvek","theta","nu","gamma"),
       p <- dim(X)[2]
       D <- a$dvek
         m <- length(a$gamma)
-        A <- X%*%D[,1:m,drop=FALSE]
+        #A <- X%*%D[,1:m,drop=FALSE]
+        A <- tcrossprod(X,t(D[,1:m,drop=FALSE]))
         AAinv <- solve(crossprod(A))
         H1 <- tcrossprod(AAinv,A)
         H <- A%*%H1
@@ -248,12 +252,9 @@ function(Y,X,a,b=NULL,pars=c("dvek","theta","nu","gamma"),
             logprop.theta <- log(dinvgamma(a$theta, (n-length(updates))/2, (crossprod(t(cpy),Y) + delta)/2))
           }
         if(c("nu")%in%pars){
+            invscale2 <- apply(D,2,.nuscale2, A=X, eps=eps$nueps)
             for(kk in 1:p){
-                invscale <- eps$nueps
-                for(kkk in 1:n){
-                   invscale <- invscale + 0.5*drop(crossprod(D[,kk],X[kkk,]))^2
-                }            
-                logprop.nu <- logprop.nu + log(dinvgamma(a$nu[kk], n/2, invscale))
+                logprop.nu <- logprop.nu + log(dinvgamma(a$nu[kk], n/2, invscale2[kk]))
             }
         }
         if(c("gamma")%in%pars && length(updates)>0){
@@ -280,6 +281,18 @@ function(a, A, AAinv, Y){
         mu.gamma <- tcrossprod(AAinv,A)%*%Y
         return(list(mu.gamma=mu.gamma, sig.gamma=sig.gamma))
     }
+.nuscale <- 
+  function(x,A,eps){
+  x <- matrix(x,ncol=1)
+  n <- dim(X)[1]
+  sc <- eps + 0.5*sum((A%*%x)^2)
+  cand <- rinvgamma(1, n/2, sc)
+    }
+.nuscale2 <- 
+  function(x,A,eps){
+  x <- matrix(x,ncol=1)
+  sc <- eps + 0.5*sum((A%*%x)^2)
+}
 .pd1 <-
 function(Y, X, obj, start=2, stop=length(obj$theta$solu)){
       D1 <- .Dbar(Y, X, obj, start, stop) 
