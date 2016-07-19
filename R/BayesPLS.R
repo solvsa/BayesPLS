@@ -20,11 +20,11 @@ function(Y, X, ncomp,
                   update.gamma = TRUE,
                   update.seq.gamma = TRUE),
               eps=list(gammaeps = 1/19,
-                       nueps = 1/31,
-                       thetaeps = 1/31,
-                       dvekeps = 0.00005,
-                       lambda = -log(0.001),
-                       fi = 0.5),              
+                  nueps = 1/31,
+                  thetaeps = 1/31,
+                  dvekeps = 0.00005,
+                  lambda = -log(0.001),
+                  fi = 0.5),              
               previousobj = NULL 
               ){
 
@@ -64,7 +64,7 @@ function(Y, X, ncomp,
         nuobj      <-list(solu=matrix(0,Tt,p)           ,eps=0  ,accept=0   ,rate=0)
         betasolu   <-matrix(0,Tt,p)
         SSE        <-rep(0,Tt)
-
+        rmat       <-matrix(0,Tt,ncomp)
         
         if(doinit){ 
           last <- .initiate(Y.c, X.c, ncomp, init.method)
@@ -150,7 +150,7 @@ function(Y, X, ncomp,
           #Individual probabilities for the gammas for joining a block update
           rho.gamma <- .find.rho(Y.c, actual, A=A, AAinv=AAinv, eps)
           u.gamma <- runif(ncomp,0,1)
-          r.gamma <- as.numeric(u.gamma<rho.gamma)
+          r.gamma <- rmat[k,] <- as.numeric(u.gamma<rho.gamma)
           updates <- which(r.gamma==0)
           #Compute the contribution from gamma to the posterior of theta
           moms <- .moments(actual, A, AAinv, Y.c)
@@ -176,26 +176,14 @@ function(Y, X, ncomp,
           if(update$update.nu){     
             cand <- actual$nu
             if(!approx){
-            for(j in 1:p){
-              invscale <- eps$nueps
-              for(jj in 1:n){
-                invscale <- invscale + 0.5*drop(tcrossprod(t(D[,j]),X.c[jj,]))^2
-              }
-              cand[j] <- rinvgamma(1, n/2, invscale)
-            }
+              cand <- apply(D,2,.nuscale,A=X.c, eps=eps$nueps)
             }else{
               if(k<appit){
                 use <- p
               }else{
                 use <- usenus
               }
-              for(j in 1:use){
-                invscale <- eps$nueps
-                for(jj in 1:n){
-                  invscale <- invscale + 0.5*drop(tcrossprod(t(D[,j]),X.c[jj,]))^2
-                }
-                cand[j] <- rinvgamma(1, n/2, invscale)
-              } 
+              cand[1:use] <- apply(D[,1:use],2,.nuscale,A=X.c, eps=eps$nueps)
             }
             actual$nu <- cand
           }
@@ -322,6 +310,7 @@ function(Y, X, ncomp,
           theta = thetaobj,
           betas = betasolu,
           SSEs = SSE,
+          rmat = rmat,
           scale = scale,
           Y = Y,
           X = X,
