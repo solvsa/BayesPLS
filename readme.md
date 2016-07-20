@@ -1,4 +1,9 @@
 # Bayes PLS
 
-This repository is no private. I got an academic license with free repos for 2 yrs.
-Very good and quick service from github!
+```r
+if (!any(installed.packages()[,1] == "devtools")) {
+  install.packages("devtools")
+}
+
+devtools::install_github("solvsa/BayesPLS")
+```
