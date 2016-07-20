@@ -30,7 +30,6 @@ function(Y, X, ncomp,
 
         #For plotting and updating etc.
         if(dotrace){
-          #windows(15,10)
           dev.new(noRStudioGD = TRUE, height = 10, width = 15) 
           layout(matrix(1:4,2,2, byrow=TRUE))
           par(mar=c(4,4,2,1))
@@ -64,8 +63,7 @@ function(Y, X, ncomp,
         nuobj      <-list(solu=matrix(0,Tt,p)           ,eps=0  ,accept=0   ,rate=0)
         betasolu   <-matrix(0,Tt,p)
         SSE        <-rep(0,Tt)
-        rmat       <-matrix(0,Tt,ncomp)
-        
+
         if(doinit){ 
           last <- .initiate(Y.c, X.c, ncomp, init.method)
           
@@ -93,8 +91,7 @@ function(Y, X, ncomp,
           nnu <- length(bignu)
           usenus <- min(nnu, appcomp)
         }
-        #usenus <- 50
-        
+
         k <- 1
         dosave <- FALSE
         
@@ -150,7 +147,7 @@ function(Y, X, ncomp,
           #Individual probabilities for the gammas for joining a block update
           rho.gamma <- .find.rho(Y.c, actual, A=A, AAinv=AAinv, eps)
           u.gamma <- runif(ncomp,0,1)
-          r.gamma <- rmat[k,] <- as.numeric(u.gamma<rho.gamma)
+          r.gamma <- as.numeric(u.gamma<rho.gamma)
           updates <- which(r.gamma==0)
           #Compute the contribution from gamma to the posterior of theta
           moms <- .moments(actual, A, AAinv, Y.c)
@@ -221,7 +218,6 @@ function(Y, X, ncomp,
           if(update$update.seq.gamma){
             actual <- last
             D <- actual$dvek
-        #    A <- X.c%*%D[,1:ncomp,drop=FALSE]
             A <- tcrossprod(X.c,t(D[,1:ncomp,drop=FALSE]))
             AAinv <- solve(crossprod(A))        
             moms <- .moments(actual, A, AAinv, Y.c)
@@ -280,7 +276,6 @@ function(Y, X, ncomp,
             plot(thetaobj$solu[1:k],type="l",xlab="iter",ylab=expression(theta),main=paste("Acceptance rate =",thetaobj$rate))
             matplot(gammaobj$solu[1:k,],type="l",lty=1,xlab="iter",ylab=expression(gamma),main=paste("Acceptance rate =",gammaobj$rate[1]))
             matplot(nuobj$solu[1:k,],type="l",lty=1,xlab="iter",ylab=expression(nu),main=paste("Acceptance rate =",nuobj$rate))
- #           matplot(dvekobj$solu[1:k,1,1],type="l",lty=1,xlab="iter",ylab="d[1,1]",main=paste("Acceptance rate =",dvekobj$rate))
             matplot(betasolu[1:k,],type="l",lty=1,xlab="iter",ylab=expression(beta),main="beta coefficients (for pot. scaled data)")
          }
           
@@ -297,20 +292,19 @@ function(Y, X, ncomp,
         if(scale){
           sigma.sq <- sdY^2*sigma.sq
         }
-        df.reg <- n-1-mean(SSE[from:k])/sigma.sq
+#        df.reg <- n-1-mean(SSE[from:k])/sigma.sq
         
         res <- list(
           coefficients = betahat,
           intercept = beta0,
           sigma.sq = sigma.sq,
-          df.reg = df.reg,
+#          df.reg = df.reg,
           D = dvekobj,
           gamma = gammaobj,
           nu = nuobj,
           theta = thetaobj,
           betas = betasolu,
           SSEs = SSE,
-          rmat = rmat,
           scale = scale,
           Y = Y,
           X = X,

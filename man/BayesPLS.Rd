@@ -33,7 +33,7 @@ Total number of MCMC iterations
 }
   \item{start}{
 At which result iteration the estimation of parameters should start. All previous iterations are regarded as burn-in.
-Note, the value refers to iteration number after thinning.
+Note, the value refers to iteration number before thinning.
 }
   \item{doinit}{
 Should the parameters be initiated using regular PLSR or PCR? Defaults to TRUE, but may be set to FALSE if a previous

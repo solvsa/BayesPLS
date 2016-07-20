@@ -115,7 +115,7 @@ function(x){
             e <- c(1,rep(0,m-1))
             u <- x - alpha*e
             v <- u/sqrt(drop(crossprod(u)))
-            diag(m) - 2*v%*%t(v)
+            diag(m) - 2*tcrossprod(v,v)
     }
 .initiate <-
 function(Y,X,ncomp, init.method, reorder.gamma=TRUE){
@@ -175,7 +175,7 @@ function(Y,X,ncomp){
         }
         last.init$dvek <- D
         last.init$gamma <- t(plsfit$coef[,,ncomp]%*%plsfit$loading.weights[,1:ncomp])
-        nus <- diag(t(D)%*%S%*%D)
+        nus <- diag(t(D)%*%(S%*%D))
         last.init$nu <- nus
         #last.init$nu <- rep(1/sum(nus),p)
         last.init
@@ -220,6 +220,10 @@ function(vars, lambdas, eigenvecs, mu=rep(0,length(lambdas)))
         logSdet <- sum(log(lambdas))
         oo <- apply(vars,1,.kern, logSdet, Sigmainv, mu) 
         sum(oo)
+}
+.linvgamma <- 
+  function(x,n){
+    log(dinvgamma(x[1],n/2, x[2]))
     }
 .logprop <-
 function(Y,X,a,b=NULL,pars=c("dvek","theta","nu","gamma"), 
@@ -232,7 +236,8 @@ function(Y,X,a,b=NULL,pars=c("dvek","theta","nu","gamma"),
         A <- tcrossprod(X,t(D[,1:m,drop=FALSE]))
         AAinv <- solve(crossprod(A))
         H1 <- tcrossprod(AAinv,A)
-        H <- A%*%H1
+      #  H <- A%*%H1
+        H <- crossprod(t(A),H1)
         logprop.dvek <- logprop.theta <- logprop.nu <- logprop.gamma <- logprop.r <- 0
         if(is.null(mom)){
             rho <- .find.rho(Y, a, A, AAinv, eps)
@@ -252,17 +257,27 @@ function(Y,X,a,b=NULL,pars=c("dvek","theta","nu","gamma"),
             logprop.theta <- log(dinvgamma(a$theta, (n-length(updates))/2, (crossprod(t(cpy),Y) + delta)/2))
           }
         if(c("nu")%in%pars){
-            invscale2 <- apply(D,2,.nuscale2, A=X, eps=eps$nueps)
-            for(kk in 1:p){
-                logprop.nu <- logprop.nu + log(dinvgamma(a$nu[kk], n/2, invscale2[kk]))
-            }
+            invscale <- apply(D,2,.nuscale2, A=X, eps=eps$nueps)
+           # for(kk in 1:p){
+           #     logprop.nu <- logprop.nu + log(dinvgamma(a$nu[kk], n/2, invscale[kk]))
+           # }
+          # parmat <- cbind(a$nu, invscale)
+          #  logprop.nu <- sum(apply(parmat,1,.linvgamma, n=n))
+            logprop.nu <- sum(.ldinvgamma(a$nu, n/2,invscale))
         }
         if(c("gamma")%in%pars && length(updates)>0){
             cond <- .cond.mom(a, mom$mu.gamma, a$theta*mom$sig.gamma, subs=updates)
             logprop.gamma <- dmvnorm(c(a$gamma[updates]), mean=cond$mu, sigma=cond$sig, log=TRUE)
         }
         return(logprop.dvek + logprop.theta + logprop.nu + logprop.gamma + logprop.r)
-    }
+}
+.ldinvgamma <- 
+  function (x, shape, scale){
+    n <- length(x)
+    alpha <- shape
+    beta <- scale
+    log.density <- alpha * log(beta) - lgamma(alpha) - (alpha + 1) * log(x) - (beta/x)
+  }
 .metrop <-
 function(Y, X, actual, last, logprop1, logprop2, eps)
     {
