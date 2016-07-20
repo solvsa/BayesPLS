@@ -116,7 +116,7 @@ Solve S?b?
 \examples{
 library(simrel)
 set.seed(1430)
-sim <- simrel(n=30, p=50, m=2, q=50, relpos=c(1,3), gamma=0.5, R2=0.8, muY=3, muX=rnorm(50,5,1), ntest=1000)
+sim <- simrel(n=30, p=50, q=50, relpos=c(1,3), gamma=0.5, R2=0.8, muY=3, muX=rnorm(50,5,1), ntest=1000)
 X <- sim$X
 Y <- sim$Y
 
