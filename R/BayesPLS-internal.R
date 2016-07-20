@@ -299,7 +299,7 @@ function(a, A, AAinv, Y){
 .nuscale <- 
   function(x,A,eps){
   x <- matrix(x,ncol=1)
-  n <- dim(X)[1]
+  n <- dim(x)[1]
   sc <- eps + 0.5*sum((A%*%x)^2)
   cand <- rinvgamma(1, n/2, sc)
     }
