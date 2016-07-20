@@ -10,7 +10,8 @@ based on the concept of relevant components and MCMC
 }
 \usage{
 BayesPLS(Y, X, ncomp, scale = TRUE, totiter = 1000, start = 1, doinit = TRUE, init.method = c("PLS"), 
-dotrace = TRUE, plotint = 10, thin = 10, adaptint = 100, update = list(update.dvek = TRUE, update.nu = TRUE, 
+dotrace = TRUE, plotint = 10, thin = 10, adaptint = 100, approx = FALSE, appit = 100, appcomp = 50,
+approp = 0.999, update = list(update.dvek = TRUE, update.nu = TRUE, 
 update.theta = TRUE, update.gamma = TRUE, update.seq.gamma = TRUE), eps = list(gammaeps = 1/19, nueps = 1/31, 
 thetaeps = 1/31, dvekeps = 5e-05, lambda = -log(0.001), fi = 0.5), previousobj = NULL)
 }
@@ -57,6 +58,20 @@ The thinning value. Defaults to 10 in which case only every 10th value is saved.
 The step-lengths for the rotation of the eigenvectors (D) is tuned with this frequency. Defauilts to 100.
 At this frequency the acceptance rate is also reported i nthe trace plots.
 }
+  \item{approx}{
+Logical. If TRUE then only a subspace corresponding to the largest eigenvalues (nu's) are updated after \code{appit} iterations. The dimensions of the subspace is set by the minimum cumulative sum of the eigenvalues determined by \code{approp}. 
+}
+  \item{appit}{
+  The number of initial rotations of the complete predictor space before a reduced space is used if 
+\code{approx = TRUE}
+  }
+  \item{appcomp}{
+  The maximum dimension of the reduced space if \code{approx = TRUE}.
+}
+  \item{approp}{
+The proportion of the total variance of X (cumulative sum of eigenvalues) to be explained
+by the reduced space (if \code{approx = TRUE}). Note that \code{appcomp} is the maximum dimension.
+}
   \item{update}{
 A logical list. Sets whether various parameters should be estimated (updated in MCMC) or not. 
 Defaults to TRUE for all parameters.
@@ -77,7 +92,7 @@ To be filled in.
 \item{coefficients }{The estimated regression coefficients for the original (unscaled) predictors.}
 \item{intercept }{The estimated intercept of the model.}
 \item{sigma.sq }{The estimated noise variance (same as the parameter theta in the model).}
-\item{df.reg }{An estimate of the degrees of freedom of regression.}
+%\item{df.reg }{An estimate of the degrees of freedom of regression.}
 \item{D }{The MCMC object of the eigenvectors, D. Contains a sub-element 'solu' with the sampled values.}
 \item{gamma }{The MCMC object of the weights of the latent components. Contains a sub-element 'solu' with the sampled values.}
 \item{nu }{The MCMC object of the eigenvalues, nu. Contains a sub-element 'solu' with the sampled values.}
@@ -93,7 +108,7 @@ To be filled in.
 %% ~put references to the literature/web site here ~
 }
 \author{
-Solve Sæbø
+Solve S?b?
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
