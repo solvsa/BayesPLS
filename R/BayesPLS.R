@@ -11,8 +11,8 @@ function(Y, X, ncomp,
               adaptint = 100,
               approx = FALSE,
               appit = 10,
-              appcomp = 50,
-              approp = 0.99,
+              appcomp = 100,
+              approp = 0.999,
               update = list(
                   update.dvek  = TRUE,    
                   update.nu    = TRUE,
@@ -22,11 +22,15 @@ function(Y, X, ncomp,
               eps=list(gammaeps = 1/19,
                   nueps = 1/31,
                   thetaeps = 1/31,
-                  dvekeps = 0.00005,
+                  #dvekeps = 1,
                   lambda = -log(0.001),
-                  fi = 0.5),              
+                  fi = 0.5),
+              deps = 0,
               previousobj = NULL 
               ){
+        
+        #Input check of eps elements
+        if(any(unlist(lapply(eps[1:3],function(x){(1/x)%%2!=1})))){stop("The inverse of gammaeps, nueps and thetaeps must be odd numbers")}
 
         #For plotting and updating etc.
         if(dotrace){
@@ -43,6 +47,9 @@ function(Y, X, ncomp,
         
         n <- dim(X)[1]
         p <- dim(X)[2]
+        if(p>=500){
+          warning("For large p approx=TRUE is recommended\n")
+        }
         
         #Centering of matrices
         X.c <- scale(X, scale=scale)
@@ -72,8 +79,13 @@ function(Y, X, ncomp,
           gammaobj$solu[1,] <- last$gamma; 
           dvekobj$solu[1,,] <- last$dvek;  
           thetaobj$solu[1] <- last$theta; 
-          if(doinit){dvekobj$eps  <- eps$dvekeps}
-          
+          #dvekobj$eps  <- eps$dvekeps
+          if(identical(deps%%1,0)){
+            dvekobj$eps <- 2^{deps}*exp(1.2 - 0.01*n - 0.12*p - 3.2*ncomp + 0.003*n*ncomp + 0.036*p*ncomp - 0.00007*n*p)
+          }else{
+            dvekobj$eps <- deps
+          }
+          #(if(approx){dvekobj$eps <- deps*exp(0.32 - 0.02*n - 2.5*ncomp + 0.005*n*ncomp)})
         }else{
           last <- list()
           if(is.null(previousobj))stop("No previous fitted object found\n")
@@ -118,7 +130,7 @@ function(Y, X, ncomp,
               cand <- crossprod(Rot,actual$dvek)#*sample(c(-1,1),1)
               actual$dvek <- cand
             }else{
-              if(k<appit){
+              if(i<appit){
                 use <- p
               }else{
                 use <- usenus
@@ -131,6 +143,7 @@ function(Y, X, ncomp,
               neg <- which(diag(Rot2)<0)
               Rot2[,neg] <- (-1)*Rot2[,neg]
               Rot[1:use, 1:use] <- Rot2
+              #browser()
               cand <- crossprod(Rot,actual$dvek[,1:use])#*sample(c(-1,1),1)
               actual$dvek[,1:use] <- cand
             }
@@ -175,7 +188,7 @@ function(Y, X, ncomp,
             if(!approx){
               cand <- apply(D,2,.nuscale,A=X.c, eps=eps$nueps)
             }else{
-              if(k<appit){
+              if(i<appit){
                 use <- p
               }else{
                 use <- usenus

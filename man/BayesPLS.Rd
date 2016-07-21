@@ -13,7 +13,7 @@ BayesPLS(Y, X, ncomp, scale = TRUE, totiter = 1000, start = 1, doinit = TRUE, in
 dotrace = TRUE, plotint = 10, thin = 10, adaptint = 100, approx = FALSE, appit = 100, appcomp = 50,
 approp = 0.999, update = list(update.dvek = TRUE, update.nu = TRUE, 
 update.theta = TRUE, update.gamma = TRUE, update.seq.gamma = TRUE), eps = list(gammaeps = 1/19, nueps = 1/31, 
-thetaeps = 1/31, dvekeps = 5e-05, lambda = -log(0.001), fi = 0.5), previousobj = NULL)
+thetaeps = 1/31, lambda = -log(0.001), fi = 0.5), deps = 0, previousobj = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -77,8 +77,14 @@ A logical list. Sets whether various parameters should be estimated (updated in 
 Defaults to TRUE for all parameters.
 }
   \item{eps}{
-Some internal tuning parameters for priors and the step-length parameter for the rotation of 
-the eigenvector matrix D.
+Some internal tuning parameters for priors and proposal distributions.
+}
+  \item{deps}{
+Sets the step-length parameter for the rotation of the eigenvector matrix D.
+Defaults to 0 in which case the steps are determined as a function of n, p and ncomp.
+Other integer values of deps can be used to decrease (deps > 0) or increase (deps > 0) the initial step lengths. The adjustment will then be equal to 2^{deps}. If deps
+is a non-integer (if modulo deps is not zero) the value is interpreted as an actual
+step length value to replace the internal default value.
 }
   \item{previousobj}{
 A previously fitted BayesPLS object from which starting values will be retrieved if initiate = FALSE
