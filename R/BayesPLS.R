@@ -81,11 +81,12 @@ function(Y, X, ncomp,
           thetaobj$solu[1] <- last$theta; 
           #dvekobj$eps  <- eps$dvekeps
           if(identical(deps%%1,0)){
-            dvekobj$eps <- 2^{deps}*exp(1.2 - 0.01*n - 0.12*p - 3.2*ncomp + 0.003*n*ncomp + 0.036*p*ncomp - 0.00007*n*p)
+            #dvekobj$eps <- 2^{deps}*exp(1.2 - 0.01*n - 0.12*p - 3.2*ncomp + 0.003*n*ncomp + 0.036*p*ncomp - 0.00007*n*p)
+            dvekobj$eps <- 2^{deps}*exp(0.32 - 0.02*n - 2.5*ncomp + 0.005*n*ncomp)
           }else{
             dvekobj$eps <- deps
           }
-          #(if(approx){dvekobj$eps <- deps*exp(0.32 - 0.02*n - 2.5*ncomp + 0.005*n*ncomp)})
+          #(if(approx){dvekobj$eps <- 2^{deps}*exp(0.32 - 0.02*n - 2.5*ncomp + 0.005*n*ncomp)})
         }else{
           last <- list()
           if(is.null(previousobj))stop("No previous fitted object found\n")
@@ -98,10 +99,16 @@ function(Y, X, ncomp,
         }
         
         if(approx){
-          nuprop <- cumsum(last$nu)/sum(last$nu)
-          bignu <- which(nuprop<approp)
-          nnu <- length(bignu)
-          usenus <- min(nnu, appcomp)
+          nus <- order(last$nu, decreasing = TRUE)
+          nuprop <- cumsum(last$nu[nus])/sum(last$nu[nus])
+          bignu <- which(nuprop>=approp)[1]
+          nnu <- min(bignu, appcomp)
+#          usenus <- unique(c(1:ncomp,nus[1:nnu]))      #Change back
+          usenus <- unique(c(1:ncomp,1:nus[nnu]))
+#          nuprop <- cumsum(last$nu)/sum(last$nu)
+#          bignu <- which(nuprop>=approp)
+#          nnu <- length(bignu)
+#          usenus <- min(nnu, appcomp)
         }
 
         k <- 1
@@ -131,21 +138,28 @@ function(Y, X, ncomp,
               actual$dvek <- cand
             }else{
               if(i<appit){
-                use <- p
+                use <- 1:p
               }else{
                 use <- usenus
               }
+              usep <- length(use)
               #Rotating the d-vectors corresponding to the largest eigenvalues 
               #by a random rotation (random walk on unit sphere)
-              Rot <- diag(p)
-              E <- matrix(rnorm(use^2,0,dvekobj$eps),use,use)+diag(use)
+              # Rot <- diag(p)
+              # E <- matrix(rnorm(usep^2,0,dvekobj$eps),usep,usep)+diag(usep)
+              # Rot2 <- .QR(E)$Q
+              # neg <- which(diag(Rot2)<0)
+              # Rot2[,neg] <- (-1)*Rot2[,neg]
+              # Rot[use, use] <- Rot2
+              # cand <- crossprod(Rot,actual$dvek[,use])#*sample(c(-1,1),1)
+              Rot <- matrix(0,p,usep)
+              E <- matrix(rnorm(usep^2,0,dvekobj$eps),usep,usep)+diag(usep)
               Rot2 <- .QR(E)$Q
               neg <- which(diag(Rot2)<0)
               Rot2[,neg] <- (-1)*Rot2[,neg]
-              Rot[1:use, 1:use] <- Rot2
-              #browser()
-              cand <- crossprod(Rot,actual$dvek[,1:use])#*sample(c(-1,1),1)
-              actual$dvek[,1:use] <- cand
+              Rot <- rbind(Rot2, matrix(0,p-usep,usep))
+              cand <- actual$dvek%*%Rot
+              actual$dvek[,use] <- cand
             }
           }
           #Derived variables
@@ -189,11 +203,11 @@ function(Y, X, ncomp,
               cand <- apply(D,2,.nuscale,A=X.c, eps=eps$nueps)
             }else{
               if(i<appit){
-                use <- p
+                use <- 1:p
               }else{
                 use <- usenus
               }
-              cand[1:use] <- apply(D[,1:use],2,.nuscale,A=X.c, eps=eps$nueps)
+              cand[use] <- apply(D[,use],2,.nuscale,A=X.c, eps=eps$nueps)
             }
             actual$nu <- cand
           }
@@ -286,10 +300,10 @@ function(Y, X, ncomp,
           
           #Trace plots
           if((is.element(i,plottime)) & dotrace){
-            plot(thetaobj$solu[1:k],type="l",xlab="iter",ylab=expression(theta),main=paste("Acceptance rate =",thetaobj$rate))
-            matplot(gammaobj$solu[1:k,],type="l",lty=1,xlab="iter",ylab=expression(gamma),main=paste("Acceptance rate =",gammaobj$rate[1]))
-            matplot(nuobj$solu[1:k,],type="l",lty=1,xlab="iter",ylab=expression(nu),main=paste("Acceptance rate =",nuobj$rate))
-            matplot(betasolu[1:k,],type="l",lty=1,xlab="iter",ylab=expression(beta),main="beta coefficients (for pot. scaled data)")
+            plot(thetaobj$solu[2:k],type="l",xlab="iter",ylab=expression(theta),main=paste("Acceptance rate =",thetaobj$rate))
+            matplot(gammaobj$solu[2:k,],type="l",lty=1,xlab="iter",ylab=expression(gamma),main=paste("Acceptance rate =",gammaobj$rate[1]))
+            matplot(nuobj$solu[2:k,],type="l",lty=1,xlab="iter",ylab=expression(nu),main=paste("Acceptance rate =",nuobj$rate))
+            matplot(betasolu[2:k,],type="l",lty=1,xlab="iter",ylab=expression(beta),main="beta coefficients (for pot. scaled data)")
          }
           
           dosave <- FALSE
@@ -306,6 +320,7 @@ function(Y, X, ncomp,
           sigma.sq <- sdY^2*sigma.sq
         }
 #        df.reg <- n-1-mean(SSE[from:k])/sigma.sq
+        if(approx){dimspace <- length(use)}else{dimspace <- p}
         
         res <- list(
           coefficients = betahat,
@@ -321,6 +336,7 @@ function(Y, X, ncomp,
           scale = scale,
           Y = Y,
           X = X,
+          dim = dimspace,
           last = list(gamma=last$gamma,nu=last$nu,theta=last$theta,dvek=last$dvek)
         )
         class(res) <- "BayesPLS"
