@@ -2,7 +2,6 @@ BayesPLS <-
 function(Y, X, ncomp,
               scale = TRUE,
               totiter=1000,
-              start = 1,
               doinit = TRUE,
               init.method = c("PLS"),
               dotrace = TRUE,
@@ -61,7 +60,8 @@ function(Y, X, ncomp,
           sdY <- attr(Y.c, "scaled:scale")
         }
         covX <- cov(X.c)
-        
+        attributes(Y) <- attributes(Y.c)
+        attributes(X) <- attributes(X.c)
         
         #Creating solution objects
         dvekobj    <-list(solu=array(0,dim=c(Tt,p,p))   ,eps=0 ,accept=0   ,rate=0)
@@ -103,12 +103,7 @@ function(Y, X, ncomp,
           nuprop <- cumsum(last$nu[nus])/sum(last$nu[nus])
           bignu <- which(nuprop>=approp)[1]
           nnu <- min(bignu, appcomp)
-#          usenus <- unique(c(1:ncomp,nus[1:nnu]))      #Change back
           usenus <- unique(c(1:ncomp,1:nus[nnu]))
-#          nuprop <- cumsum(last$nu)/sum(last$nu)
-#          bignu <- which(nuprop>=approp)
-#          nnu <- length(bignu)
-#          usenus <- min(nnu, appcomp)
         }
 
         k <- 1
@@ -309,23 +304,23 @@ function(Y, X, ncomp,
           dosave <- FALSE
           cat(i,"\n")
         }
-        from <- ceiling(start/thin)
-        betahat <- apply(betasolu[from:k,],2,mean)
-        if(scale){ 
-            betahat <- betahat*sdY/sdX
-        }
-        beta0 <- meanY - betahat%*%meanX
-        sigma.sq <- mean(thetaobj$solu[from:k])
-        if(scale){
-          sigma.sq <- sdY^2*sigma.sq
-        }
+#        from <- ceiling(start/thin)
+#        betahat <- apply(betasolu[from:k,],2,mean)
+#        if(scale){ 
+#            betahat <- betahat*sdY/sdX
+#        }
+#        beta0 <- meanY - betahat%*%meanX
+#        sigma.sq <- mean(thetaobj$solu[from:k])
+#        if(scale){
+#          sigma.sq <- sdY^2*sigma.sq
+#        }
 #        df.reg <- n-1-mean(SSE[from:k])/sigma.sq
         if(approx){dimspace <- length(use)}else{dimspace <- p}
         
         res <- list(
-          coefficients = betahat,
-          intercept = beta0,
-          sigma.sq = sigma.sq,
+#          coefficients = betahat,
+#          intercept = beta0,
+#          sigma.sq = sigma.sq,
 #          df.reg = df.reg,
           D = dvekobj,
           gamma = gammaobj,

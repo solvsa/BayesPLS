@@ -9,7 +9,7 @@ A Bayesian estimator for the population Partial Least Squares Model
 based on the concept of relevant components and MCMC
 }
 \usage{
-BayesPLS(Y, X, ncomp, scale = TRUE, totiter = 1000, start = 1, doinit = TRUE, init.method = c("PLS"), 
+BayesPLS(Y, X, ncomp, scale = TRUE, totiter = 1000, doinit = TRUE, init.method = c("PLS"), 
 dotrace = TRUE, plotint = 10, thin = 10, adaptint = 100, approx = FALSE, appit = 100, appcomp = 50,
 approp = 0.999, update = list(update.dvek = TRUE, update.nu = TRUE, 
 update.theta = TRUE, update.gamma = TRUE, update.seq.gamma = TRUE), eps = list(gammaeps = 1/19, nueps = 1/31, 
@@ -31,10 +31,6 @@ Should the data be scaled (standardized)? Defaults to TRUE.
 }
   \item{totiter}{
 Total number of MCMC iterations
-}
-  \item{start}{
-At which result iteration the estimation of parameters should start. All previous iterations are regarded as burn-in.
-Note, the value refers to iteration number before thinning.
 }
   \item{doinit}{
 Should the parameters be initiated using regular PLSR or PCR? Defaults to TRUE, but may be set to FALSE if a previous
