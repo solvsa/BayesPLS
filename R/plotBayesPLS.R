@@ -1,4 +1,4 @@
-plotBayesPLS <- function(obj, start=NULL, stop=NULL, thin=1){
+plot.BayesPLS <- function(obj, start=NULL, stop=NULL, thin=1){
   if(is.null(start)|is.null(stop)){
     start <- 1
     stop <- length(obj$theta$solu)

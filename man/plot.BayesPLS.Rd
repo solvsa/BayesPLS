@@ -1,5 +1,5 @@
-\name{plotBayesPLS}
-\alias{plotBayesPLS}
+\name{plot.BayesPLS}
+\alias{plot.BayesPLS}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Trace plots for Bayes PLS object
 }
@@ -7,7 +7,7 @@
 This function reproduces the plots which typically are generated during the call to BayesPLS. 
 }
 \usage{
-plotBayesPLS(obj, start = NULL, stop = NULL, thin = 1)
+plot(obj, start = NULL, stop = NULL, thin = 1, which=c(1L:4L), ask=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,6 +22,12 @@ Plot to this ieration number. Deafult is NULL which means end of file.
 }
   \item{thin}{
 Thinning interval.
+}
+  \item{which}{
+if a subset of the plots is required, specify a subset of the numbers 1:4.
+}
+  \item{ask}{
+logical; if TRUE, the user is asked before each plot, see par(ask=.)
 }
 }
 \details{

@@ -3,5 +3,7 @@ importFrom(far, orthonormalization)
 importFrom(mvtnorm, rmvnorm,dmvnorm)
 importFrom(MCMCpack, rinvgamma, dinvgamma)
 importFrom(MASS, mvrnorm)
-export(BayesPLS, predict.BayesPLS, DIC, plotBayesPLS, estimateBayesPLS)
+importFrom(graphics, plot)
+importFrom(stats, predict)
+export(BayesPLS, predict.BayesPLS, DIC, plot.BayesPLS, estimate.BayesPLS)
 

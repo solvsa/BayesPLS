@@ -13,7 +13,7 @@ predict.BayesPLS(obj, newX)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{obj}{
-  The fitted Bayes PLS object.
+  A Bayes PLS estimation object as returned from a call to estimate.BayesPLS().
   }
   \item{newX}{
   A matrix containing new predictor observations.

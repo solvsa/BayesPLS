@@ -7,6 +7,6 @@ Date: 2016-07-15
 Author: Solve Sæbø
 Maintainer: Solve Sæbø <solve.sabo@nmbu.no>
 Description: A Bayesian estimator for the population Partial Least Squares Model based on the concept of relevant components
-Imports: pls, far, mvtnorm, MCMCpack, MASS 
+Imports: pls, far, mvtnorm, MCMCpack, MASS, graphics, stats 
 License: GPL-2
 Suggests: simrel
