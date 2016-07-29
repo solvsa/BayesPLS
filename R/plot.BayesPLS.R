@@ -4,16 +4,9 @@ plot.BayesPLS <- function(obj, start=NULL, stop=NULL, thin=1, which=c(1L:4L), as
     stop <- length(obj$theta$solu)
   }
   plotiter <- seq(start, stop, by=thin)
-  dev.new(noRStudioGD = TRUE, height = 10, width = 15) 
+   
   def.par <- par(no.readonly = TRUE)
-  # if(!ask){
-  #   layout(matrix(1:4,2,2, byrow=TRUE))
-  # }
-  # par(mar=c(4,4,5,1))
-  # if (ask) {
-  #   oask <- devAskNewPage(TRUE)
-  #   on.exit(devAskNewPage(oask))
-  # }
+
   if (!is.numeric(which) || any(which < 1) || any(which > 4)) 
     stop("'which' must be in 1:4")
   show <- rep(FALSE, 4)
@@ -22,10 +15,11 @@ plot.BayesPLS <- function(obj, start=NULL, stop=NULL, thin=1, which=c(1L:4L), as
     layout(matrix(c(1:4),2,2, byrow=TRUE))
   }
   par(mar=c(5.1, 4.1, 4.1, 4.1))
-  # if (ask) {
-  #   oask <- devAskNewPage(TRUE)
-  #   on.exit(devAskNewPage(oask))
-  # }
+
+  if (ask) {
+    oask <- devAskNewPage(TRUE)
+    on.exit(devAskNewPage(oask))
+  }
   
   if(show[1L]){
     dev.hold()
