@@ -4,6 +4,8 @@ function(Y, X, ncomp,
               totiter=1000,
               doinit = TRUE,
               init.method = c("PLS"),
+              init.ncomp = NULL,
+              init.sort = TRUE,
               dotrace = TRUE,
               plotint = 10,
               thin = 10,  
@@ -21,12 +23,18 @@ function(Y, X, ncomp,
               eps=list(gammaeps = 1/19,
                   nueps = 1/31,
                   thetaeps = 1/31,
+                  #dvekeps = 1,
                   lambda = -log(0.001),
                   fi = 0.5),
               deps = 0,
+              compreduce = TRUE,
+              alpha.reduce = 0.015,
+              freeze = 0.1,
               previousobj = NULL 
               ){
         
+        freezeit <- ceiling(freeze*totiter)
+  
         #Input check of eps elements
         if(any(unlist(lapply(eps[1:3],function(x){(1/x)%%2!=1})))){stop("The inverse of gammaeps, nueps and thetaeps must be odd numbers")}
 
@@ -69,23 +77,25 @@ function(Y, X, ncomp,
         nuobj      <-list(solu=matrix(0,Tt,p)           ,eps=0  ,accept=0   ,rate=0)
         betasolu   <-matrix(0,Tt,p)
         SSE        <-rep(0,Tt)
+        r.simp     <-matrix(0,totiter,ncomp)
+        remset     <-numeric(0)
+        n.gamma    <-rep(0, ncomp)
 
         if(doinit){ 
-          last <- .initiate(Y.c, X.c, ncomp, init.method)
-          
+          if(is.null(init.ncomp)){init.ncomp <- ncomp}
+          last <- .initiate(Y.c, X.c, init.ncomp, init.method, init.sort)
+
           #Initiating storage objects
+          last$gamma <- last$gamma[1:ncomp]
           nuobj$solu[1,] <- last$nu; 
           gammaobj$solu[1,] <- last$gamma; 
           dvekobj$solu[1,,] <- last$dvek;  
           thetaobj$solu[1] <- last$theta; 
-          #dvekobj$eps  <- eps$dvekeps
           if(identical(deps%%1,0)){
-            #dvekobj$eps <- 2^{deps}*exp(1.2 - 0.01*n - 0.12*p - 3.2*ncomp + 0.003*n*ncomp + 0.036*p*ncomp - 0.00007*n*p)
             dvekobj$eps <- 2^{deps}*exp(0.32 - 0.02*n - 2.5*ncomp + 0.005*n*ncomp)
           }else{
             dvekobj$eps <- deps
           }
-          #(if(approx){dvekobj$eps <- 2^{deps}*exp(0.32 - 0.02*n - 2.5*ncomp + 0.005*n*ncomp)})
         }else{
           last <- list()
           if(is.null(previousobj))stop("No previous fitted object found\n")
@@ -107,7 +117,7 @@ function(Y, X, ncomp,
 
         k <- 1
         dosave <- FALSE
-        pbar <- txtProgressBar(min = 0, max = totiter, style = 3)
+        
         for(i in 2:totiter){
           
           if(is.element(i,thinind)){
@@ -139,13 +149,7 @@ function(Y, X, ncomp,
               usep <- length(use)
               #Rotating the d-vectors corresponding to the largest eigenvalues 
               #by a random rotation (random walk on unit sphere)
-              # Rot <- diag(p)
-              # E <- matrix(rnorm(usep^2,0,dvekobj$eps),usep,usep)+diag(usep)
-              # Rot2 <- .QR(E)$Q
-              # neg <- which(diag(Rot2)<0)
-              # Rot2[,neg] <- (-1)*Rot2[,neg]
-              # Rot[use, use] <- Rot2
-              # cand <- crossprod(Rot,actual$dvek[,use])#*sample(c(-1,1),1)
+
               Rot <- matrix(0,p,usep)
               E <- matrix(rnorm(usep^2,0,dvekobj$eps),usep,usep)+diag(usep)
               Rot2 <- .QR(E)$Q
@@ -162,14 +166,42 @@ function(Y, X, ncomp,
           AAinv <- solve(crossprod(A)) 
           H1 <- tcrossprod(AAinv,A)
           H <- crossprod(t(A),H1)
-          
-          
+
           
           #Individual probabilities for the gammas for joining a block update
           rho.gamma <- .find.rho(Y.c, actual, A=A, AAinv=AAinv, eps)
           u.gamma <- runif(ncomp,0,1)
           r.gamma <- as.numeric(u.gamma<rho.gamma)
           updates <- which(r.gamma==0)
+          
+          if(compreduce){
+            n.gamma <- n.gamma + (last$gamma>0)
+            p.gamma <- n.gamma/i - 0.5
+            if((i > freezeit)&(any(abs(p.gamma) < alpha.reduce))){
+              rem <- which.min(abs(p.gamma))
+              neworder <- c((1:ncomp)[-rem],rem)
+              neworder2 <- c(neworder, (ncomp +1):p)
+              ncomp <- ncomp - 1
+              actual$gamma <- last$gamma <- last$gamma[neworder[1:ncomp]]
+              gammaobj$solu <- gammaobj$solu[,neworder[1:ncomp], drop=FALSE]
+              actual$nu <- last$nu <- last$nu[neworder2]
+              nuobj$solu <- nuobj$solu[,neworder2]
+              actual$dvek <- actual$dvek[,neworder2]
+              D <- actual$dvek
+
+              n.gamma <- n.gamma[-rem]
+              r.gamma <- r.gamma[-rem]
+              updates <- (which(r.gamma==0))
+              A <- tcrossprod(X.c,t(D[,1:ncomp,drop=FALSE]))
+              AAinv <- solve(crossprod(A)) 
+              H1 <- tcrossprod(AAinv,A)
+              H <- crossprod(t(A),H1)
+              rho.gamma <- rho.gamma[-rem]
+              freezeit <- freezeit + i
+            }
+          }
+          
+          
           #Compute the contribution from gamma to the posterior of theta
           moms <- .moments(actual, A, AAinv, Y.c)
           if(length(updates>0)){
@@ -286,7 +318,7 @@ function(Y, X, ncomp,
           #Adjustment for proposal tuning parameter(s)
           if((is.element(i,adapttime))&&(i<=totiter))
           {
-            dvekobj[2:4] <- .adjust(dvekobj, minrate=0.1, maxrate=0.3, adaptint=adaptint)
+            dvekobj[2:4] <- .adjust(dvekobj, minrate=0.1, maxrate=0.4, adaptint=adaptint)
             thetaobj[2:4] <- .adjust(thetaobj, doadjust=FALSE, adaptint=adaptint)
             nuobj[2:4] <- .adjust(nuobj, doadjust=FALSE, adaptint=adaptint) 
             gammaobj[2:4] <- .adjust.multi(gammaobj, doadjust=FALSE, adaptint=adaptint)            
@@ -301,9 +333,8 @@ function(Y, X, ncomp,
          }
           
           dosave <- FALSE
-          setTxtProgressBar(pbar, i)
+          cat(i,"\n")
         }
-        close(pbar)
 #        from <- ceiling(start/thin)
 #        betahat <- apply(betasolu[from:k,],2,mean)
 #        if(scale){ 
@@ -332,6 +363,7 @@ function(Y, X, ncomp,
           Y = Y,
           X = X,
           dim = dimspace,
+          r.simp = r.simp,
           last = list(gamma=last$gamma,nu=last$nu,theta=last$theta,dvek=last$dvek)
         )
         class(res) <- "BayesPLS"
