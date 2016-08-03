@@ -5,7 +5,7 @@ function(Y, X, ncomp,
               doinit = TRUE,
               init.method = c("PLS"),
               init.ncomp = NULL,
-              init.sort = TRUE,
+              init.sort = FALSE,
               dotrace = TRUE,
               plotint = 10,
               thin = 10,  
@@ -28,7 +28,7 @@ function(Y, X, ncomp,
                   fi = 0.5),
               deps = 0,
               compreduce = TRUE,
-              alpha.reduce = 0.015,
+              alpha.reduce = 0.4,
               freeze = 0.1,
               previousobj = NULL 
               ){
@@ -337,24 +337,9 @@ function(Y, X, ncomp,
           #cat(i,"\n")
           setTxtProgressBar(pbar, i)
         }
-#        from <- ceiling(start/thin)
-#        betahat <- apply(betasolu[from:k,],2,mean)
-#        if(scale){ 
-#            betahat <- betahat*sdY/sdX
-#        }
-#        beta0 <- meanY - betahat%*%meanX
-#        sigma.sq <- mean(thetaobj$solu[from:k])
-#        if(scale){
-#          sigma.sq <- sdY^2*sigma.sq
-#        }
-#        df.reg <- n-1-mean(SSE[from:k])/sigma.sq
         if(approx){dimspace <- length(use)}else{dimspace <- p}
         
         res <- list(
-#          coefficients = betahat,
-#          intercept = beta0,
-#          sigma.sq = sigma.sq,
-#          df.reg = df.reg,
           D = dvekobj,
           gamma = gammaobj,
           nu = nuobj,
