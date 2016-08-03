@@ -108,7 +108,7 @@ function(Y, X, ncomp,
 
         k <- 1
         dosave <- FALSE
-        
+        pbar <- txtProgressBar(min = 0, max = totiter, style = 3)
         for(i in 2:totiter){
           
           if(is.element(i,thinind)){
@@ -302,8 +302,9 @@ function(Y, X, ncomp,
          }
           
           dosave <- FALSE
-          cat(i,"\n")
+          setTxtProgressBar(pbar, i)
         }
+        close(pbar)
 #        from <- ceiling(start/thin)
 #        betahat <- apply(betasolu[from:k,],2,mean)
 #        if(scale){ 
