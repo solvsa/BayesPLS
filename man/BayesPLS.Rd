@@ -9,11 +9,7 @@ A Bayesian estimator for the population Partial Least Squares Model
 based on the concept of relevant components and MCMC
 }
 \usage{
-BayesPLS(Y, X, ncomp, scale = TRUE, totiter = 1000, doinit = TRUE, init.method = c("PLS"), 
-dotrace = TRUE, plotint = 10, thin = 10, adaptint = 100, approx = FALSE, appit = 100, appcomp = 50,
-approp = 0.999, update = list(update.dvek = TRUE, update.nu = TRUE, 
-update.theta = TRUE, update.gamma = TRUE, update.seq.gamma = TRUE), eps = list(gammaeps = 1/19, nueps = 1/31, 
-thetaeps = 1/31, lambda = -log(0.001), fi = 0.5), deps = 0, previousobj = NULL)
+BayesPLS(Y, X, ncomp, scale = TRUE, totiter = 1000, doinit = TRUE, init.method = c("PLS"), init.ncomp = NULL, init.sort = FALSE, dotrace = TRUE, plotint = 10, thin = 10, adaptint = 100, approx = FALSE, appit = 10, appcomp = 100, approp = 0.999, update = list(update.dvek = TRUE, update.nu = TRUE, update.theta = TRUE, update.gamma = TRUE, update.seq.gamma = TRUE), eps = list(gammaeps = 1/19, nueps = 1/31, thetaeps = 1/31, lambda = -log(0.001), fi = 0.5), deps = 0, compreduce = TRUE, alpha.reduce = 0.4, freeze = 0.1, previousobj = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -40,6 +36,13 @@ values for the parameters.
   \item{init.method}{
 Method for initiating the parameters, either "PLS" or "PCR". Both use the specified ncomp as the number
 of components.
+}
+  \item{init.ncomp}{
+The number of components used by PLS or PCR in the initiation step for the Bayes PLS model parameters.
+Deafults to NULL which means that init.ncomp = ncomp. 
+}
+  \item{init.sort}{
+Should the components found in the intiation step through PLS or PCR be sorted in a decreasing order according to the initial values of their weights? Deafults to FALSE which is most appropriate for init.method = "PLS", If init.method ="PCR" init.sort = TRUE is recommended.
 }
   \item{dotrace}{
 Should the traceplots be generated? Defaults to TRUE.
@@ -82,6 +85,17 @@ Other integer values of deps can be used to decrease (deps > 0) or increase (dep
 is a non-integer (if modulo deps is not zero) the value is interpreted as an actual
 step length value to replace the internal default value.
 }
+  \item{compreduce}{
+Logical. If TRUE the weights for the components (gamma-values) are tested using bayesian p-values.
+If the Bayesian p.value exceeds alpha.reduce for a given component, the component is excluded from further
+iterations. 
+}
+  \item{alpha.reduce}{
+Test level for testing the significance (from zero) for the gammas. Defaults to 0.4 which means that if the proportion of sampled values above (or below) zero is in the range [0.4, 0.6], the component is regarded as irrelevant.
+}
+  \item{freeze}{
+A number between 0 and 1 which sets the proportion of totiter to be run before any component may be removed from the model. Defaults to 0.1. The same number of iterations will be run after a removal before any other component may be removed from the model.
+}
   \item{previousobj}{
 A previously fitted BayesPLS object from which starting values will be retrieved if initiate = FALSE
 and the model specification and data is identical.
@@ -123,12 +137,13 @@ X <- sim$X
 Y <- sim$Y
 
 test <- BayesPLS(Y,X,3,scale=TRUE, totiter=500, start=20, dotrace=TRUE, adaptint=50, plotint=10)
-pred <- predict(test, sim$TESTX)
+est <- estimate(test, start=20)
+pred <- predict(est, sim$TESTX)
 windows()
 plot(sim$TESTY, pred, xlab="Observed", ylab="Predicted", main="Prediction plot for test data")
 curve(1*x, add=TRUE, col=2)
 
-print(DIC(test,start=20))
+print(DIC(est,start=20))
 
 }
 \keyword{models }% use one of  RShowDoc("KEYWORDS")
