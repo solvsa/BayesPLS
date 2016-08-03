@@ -2,7 +2,7 @@
 function(x,minrate=0.25,maxrate=0.5,stepfactor=1.2, doadjust=TRUE, adaptint)
     {
         x$rate <- x$accept/adaptint
-        if(doadjust){
+        if(doadjust & (x$eps>1e-16)){
             if(x$rate<minrate){x$eps<-x$eps/stepfactor}
             if(x$rate>maxrate){x$eps<-x$eps*stepfactor}
         }
@@ -127,7 +127,7 @@ function(Y,X,ncomp, init.method, reorder.gamma=TRUE){
         }
         
         if(reorder.gamma){   
-            #Reordering, largest gamma f?rst, optional step, but may be wise for PCR initiation
+            #Reordering, largest gamma first, optional step, but may be wise for PCR initiation
             index <- rev(order(abs(last$gamma)))
             last$gamma <- last$gamma[index]
             last$nu[1:ncomp] <- last$nu[index]
