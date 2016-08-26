@@ -28,6 +28,8 @@ estimate.BayesPLS <- function(obj, start=1, stop=NULL, thin=1, probs = c(0.025, 
   res$coefficients <- betahat
   res$intercept <- beta0
   res$sigma.sq <- sigma.sq
+  res$trace.beta <- betas
+  res$trace.beta0s <- beta0s
   res$quantiles <- t(betaquants)
   res$quantiles.int <- beta0quants
   res$quantiles.sigma.sq <- sigma.sq.quants

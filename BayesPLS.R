@@ -135,8 +135,7 @@ function(Y, X, ncomp,
               #Rotating the d-vectors by a random rotation 
               #(random walk on unit sphere)
               E <- matrix(rnorm(p^2,0,dvekobj$eps),p,p)+diag(p)
-              #Rot <- .QR(E)$Q
-              Rot <- qr.Q(qr(E), complete=TRUE)
+              Rot <- .QR(E)$Q
               neg <- which(diag(Rot)<0)
               Rot[,neg] <- (-1)*Rot[,neg]
               cand <- crossprod(Rot,actual$dvek)#*sample(c(-1,1),1)
@@ -153,8 +152,7 @@ function(Y, X, ncomp,
 
               Rot <- matrix(0,p,usep)
               E <- matrix(rnorm(usep^2,0,dvekobj$eps),usep,usep)+diag(usep)
-              #Rot2 <- .QR(E)$Q
-              Rot2 <- qr.Q(qr(E), complete=TRUE)
+              Rot2 <- .QR(E)$Q
               neg <- which(diag(Rot2)<0)
               Rot2[,neg] <- (-1)*Rot2[,neg]
               Rot <- rbind(Rot2, matrix(0,p-usep,usep))
@@ -320,7 +318,7 @@ function(Y, X, ncomp,
           #Adjustment for proposal tuning parameter(s)
           if((is.element(i,adapttime))&&(i<=totiter))
           {
-            dvekobj[2:4] <- .adjust(dvekobj, minrate=0.05, maxrate=0.4, adaptint=adaptint)
+            dvekobj[2:4] <- .adjust(dvekobj, minrate=0.1, maxrate=0.4, adaptint=adaptint)
             thetaobj[2:4] <- .adjust(thetaobj, doadjust=FALSE, adaptint=adaptint)
             nuobj[2:4] <- .adjust(nuobj, doadjust=FALSE, adaptint=adaptint) 
             gammaobj[2:4] <- .adjust.multi(gammaobj, doadjust=FALSE, adaptint=adaptint)            
