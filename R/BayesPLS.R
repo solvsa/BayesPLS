@@ -1,7 +1,8 @@
 BayesPLS <-
 function(Y, X, ncomp,
               scale = TRUE,
-              totiter=1000,
+              totiter = 10000,
+              burnin = 1000, 
               doinit = TRUE,
               init.method = c("PLS"),
               init.ncomp = NULL,
@@ -49,7 +50,7 @@ function(Y, X, ncomp,
         plottime<-seq(plotint,totiter,by=plotint) 
         thinind<-seq(thin,totiter-1,by=thin)
         Tt <- length(thinind)+1 
-        adapttime<-seq(adaptint,totiter,by=adaptint)    
+        adapttime<-seq(adaptint,burnin,by=adaptint)    
         
         n <- dim(X)[1]
         p <- dim(X)[2]
