@@ -2,7 +2,7 @@ BayesPLS <-
 function(Y, X, ncomp,
               scale = TRUE,
               totiter = 10000,
-              burnin = 1000, 
+              burnin = 2000, 
               doinit = TRUE,
               init.method = c("PLS"),
               init.ncomp = NULL,
