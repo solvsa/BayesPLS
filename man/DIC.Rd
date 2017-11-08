@@ -1,4 +1,4 @@
-﻿\name{DIC}
+\name{DIC}
 \alias{DIC}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -38,7 +38,20 @@ Solve Sæbø
 }
 
 \examples{
-## See ?BayesPLS
+library(simrel)
+set.seed(1430)
+sim <- simrel(n=30, p=50, q=50, relpos=c(1,3), gamma=0.5, R2=0.8, muY=3, muX=rnorm(50,5,1), ntest=1000)
+X <- sim$X
+Y <- sim$Y
+
+test <- BayesPLS(Y,X,3,scale=TRUE, totiter=500, start=20, dotrace=TRUE, adaptint=50, plotint=10)
+est <- estimate(test, start=20)
+pred <- predict(est, sim$TESTX)
+windows()
+plot(sim$TESTY, pred, xlab="Observed", ylab="Predicted", main="Prediction plot for test data")
+curve(1*x, add=TRUE, col=2)
+
+print(DIC(est,start=20))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
